@@ -10,6 +10,34 @@
         :root{
             --palette-width: 250px;
         }
+
+        input[type=range]{ 
+                 
+                outline: none; 
+                -webkit-appearance: none;/*清除系统默认样式*/  
+                width:56% !important;  
+                background: -webkit-linear-gradient(#61bd12, #61bd12) no-repeat, #ddd;  
+                background-size: 30% 100%;/*设置左右宽度比例*/  
+                height: 3px;/*横条的高度*/  
+        } 
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 300px;
+            border-radius: 10px; /*这个属性设置使填充进度条时的图形为圆角*/
+        }
+        
+        input[type=range]::-webkit-slider-thumb {  
+             -webkit-appearance: none;/*清除系统默认样式*/  
+            height:16px;/*拖动块高度*/  
+                width: 16px;/*拖动块宽度*/  
+                background: #fff;/*拖动块背景*/  
+            border-radius: 50%; /*外观设置为圆形*/  
+             border: solid 1px #ddd; /*设置边框*/  
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+
         div,textarea{
             box-sizing: border-box;
         }
@@ -28,7 +56,7 @@
         }
         #img-tool,#txt-tool{
             width:100%;
-            top:200px;
+            top:350px;
             -webkit-transform:translateY(-70px);
             opacity: 0.2;
             position:absolute;
@@ -36,8 +64,13 @@
             overflow: hidden;
             transition:height 0.5s cubic-bezier(0.42,0,1,1),transform 0.4s cubic-bezier(0.42,0,1,1),opacity 0.5s cubic-bezier(0.42,0,1,1);
         }
+        #delete-tool{
+            width:100%;
+            position:absolute;
+            bottom:50px;
+        }
         #txt-tool{
-            top:400px;
+            top:500px;
         }
         
         .text-clip{
@@ -66,6 +99,11 @@
         }
         .bgi-normal{
             background-size: 100% 100%;
+            background-position: center center;
+            background-repeat: no-repeat;
+        }
+        .bgi-center{
+            background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
         }
@@ -124,23 +162,35 @@
         }
         .txt-palette ul li input{
             width:120px;
-            transform:translateY(4px);
+            transform:translateY(-5px);
         }
     </style>
 </head>
 
 <body class='p-0 m-0 h-100 lump-blue position-relative' style='overflow:hidden;'>
     
-    <div class='tool-bar m-0 pt-4 h-100 bg-black position-absolute' style='width:100px;right:0;top:0;box-sizing: border-box;overflow:hidden;z-index:99;' data-current=''>
-        <ul  style='font-size: 30px;'>
+    <div class='tool-bar m-0 h-100 bg-black position-absolute' style='width:100px;right:0;top:0;box-sizing: border-box;overflow:hidden;z-index:99;' data-current=''>
+        <ul id='main-tool' class='pt-4 border-bottom border-gray-900' style='font-size: 30px;'>
             <li>
                 <a class='add-img' data-href='img' style='overflow:hidden;'>
-                    <i class='iconfont text-white'>&#xe610;</i>
+                    <i class='iconfont text-white'>&#xe617;</i>
                     <input type="file" name="img-select" accept="image/*" class='position-absolute' style='opacity:0;width:0;height:0'/>
                 </a>
             </li>
             <li>
                 <a class='add-txt' data-href='txt'><i class='iconfont text-white'>&#xe89b;</i></a>
+            </li>
+            <li>
+                <a class='add-bgImg' >
+                    <i class='iconfont text-white'>&#xe610;</i>
+                    <input type="file" name="bgImg-select" accept="image/*" class='position-absolute' style='opacity:0;width:0;height:0'/>
+                </a>
+            </li>
+            <li>
+                <a class='add-bgColor'>
+                    <i class='iconfont text-white'>&#xe606;</i>
+                    <input type="color" name="bgColor-select"  class='position-absolute' style='opacity:0;width:0;height:0'/>
+                </a>
             </li>
         </ul>
         <ul id='img-tool' style='font-size: 30px;'>
@@ -149,6 +199,10 @@
             </li>
             <li>
                 <a class='img-scale' data-type='minus'><i class='iconfont text-white'>&#xe794;</i></a>
+            </li>
+
+            <li>
+                <a class='img-layer' data-type='low'><i class='iconfont text-white'>&#xe638;</i></a>
             </li>
         </ul>
         <ul id='txt-tool' style='font-size: 30px;'>
@@ -159,7 +213,18 @@
                 <a class='txt-minus'><i class='iconfont text-white'>&#xe633;</i></a>
             </li>
             <li>
-                <a><i class='iconfont text-bottom-gradient text-clip '>&#xe60f;</i></a>
+                <a class='txt-color'>
+                    <i class='iconfont text-bottom-gradient text-clip '>&#xe60f;</i>
+                    <input type="color" name="color-select" accept="image/*" class='position-absolute' style='opacity:0;width:0;height:0'/>
+                </a>
+            </li>
+        </ul>
+        <ul id='delete-tool' class='pt-4 border-top border-gray-900' style='font-size: 30px;'>
+            <li>
+                <a class='bg-delete'><i class='iconfont text-white'>&#xe63a;</i></a>
+            </li>
+            <li>
+                <a class='ele-delete'><i class='iconfont text-white'>&#xe616;</i></a>
             </li>
         </ul>
     </div>
@@ -168,7 +233,7 @@
             画布尺寸: 宽 <input type="number" name="width" value="800" />×
             高 <input type="number" name="height" value='600'/>
         </p>
-        <div class="canvas-content bgi-normal absolute-center"  style="text-align:center">
+        <div class="canvas-content bgi-center absolute-center"  style="text-align:center">
             
         </div>
         <div class='txt-palette position-absolute bg-gray-900' style='left:100%;top:0;height:100%;'>
@@ -186,6 +251,16 @@
                     高度
                     <input class='txt-height' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
                     <span class='txt-height-info'></span>
+                </li>
+                <li> 
+                    行高
+                    <input class='txt-lineHeight' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <span class='txt-lineHeight-info'></span>
+                </li>
+                <li> 
+                    磅数
+                    <input class='txt-fontWeight' type='range' id="rotateRatio" min='100' max='900' step='100'/>
+                    <span class='txt-fontWeight-info'></span>
                 </li> 
             </ul>
         </div>
@@ -206,9 +281,29 @@
                this.dom && this.dom.addClass('focus-ele')
 
                this.dom && $('.tool-bar').attr('data-current',this.type)
+               if(this.type== 'txt'){
+                 $('.txt-palette').find('.txt-text').val(this.text).end()   
+                 .find('.txt-height').val(this.height).trigger('change').end()
+                 .find('.txt-height-info').text(this.height).end()
+                 .find('.txt-width').val(this.width).trigger('change').end()
+                 .find('.txt-width-info').text(this.width).end()
+                 .find('.txt-lineHeight').val(this.lineHeight).trigger('change').end()
+                 .find('.txt-lineHeight-info').text(this.lineHeight).end()
+                 .find('.txt-fontWeight').val(this.fontWeight).trigger('change').end()
+                 .find('.txt-fontWeight-info').text(this.fontWeight).end()
+
+               }
+            }
+            remove(){
+                let index = elementArr.indexOf(this)
+                elementArr.splice(index,1)
+                this.dom && this.dom.remove();
+                currentElement = null;
+               $('.tool-bar').attr('data-current','')
             }
             blur(){
                 this.dom && this.dom.removeClass('focus-ele')
+
             }
         }
 
@@ -278,13 +373,19 @@
             }
             set text(val){
                 this.dom && this.dom.html(val)
-                this.init_flag || $('.txt-palette .txt-text').text(val)
-                this.init_flag = true
                 this._text = val
 
             }
             get text(){
                 return this._text
+            }
+            set color(val){
+                this.dom && this.dom.css('color',val)
+                this._color = val
+
+            }
+            get color(){
+                return this._color
             }
             set width(val){
 
@@ -313,6 +414,34 @@
             }
             get height(){
                 return this._height;
+            }
+            set lineHeight(val){
+
+                if(val!=='auto'){
+                    $('.txt-palette').find('.txt-lineHeight').val(val).end()
+                    .find('.txt-lineHeight-info').text(val)
+                    
+                }
+                this.dom && this.dom.css('line-height',val)
+                           
+                this._lineHeight = val
+            }
+            get lineHeight(){
+                return this._lineHeight;
+            }
+            set fontWeight(val){
+
+                if(val!=='auto'){
+                    $('.txt-palette').find('.txt-fontWeight').val(val).end()
+                    .find('.txt-fontWeight-info').text(val)
+                    
+                }
+                this.dom && this.dom.css('font-weight',val)
+                           
+                this._fontWeight = val
+            }
+            get fontWeight(){
+                return this._fontWeight;
             }
             
             fontPlus(){
@@ -344,10 +473,21 @@
             const $widthInput = $("input[name='width']")
             const $heightInput = $("input[name='height']")
             const $imgInput = $("input[name='img-select']")
+            const $colorInput = $("input[name='color-select']")
+            const $bgImgInput = $("input[name='bgImg-select']")
+            const $bgColorInput = $("input[name='bgColor-select']")
             const $canvas = $('.canvas-content')
             var canvasW,
                 canvasH;
-
+            $("input[type='range']").on('change',function(){
+                let $this = $(this)
+                var value = $this.val()/ Number($this.prop('max')) * 100;
+                var valStr = value + "% 100%";
+                $this.css({
+                  "background-size": valStr
+                })
+               
+            })
             $("input[name='width'],input[name='height']").on('change',function(){
                 canvasW = $widthInput.val()
                 canvasH = $heightInput.val()
@@ -389,7 +529,19 @@
                 $imgInput.val("")
                })
             })
-
+            $bgImgInput.on('change',function(e){
+              if(e.target.files[0])
+              var url = createObjectURL(e.target.files[0])
+              $canvas.css('background-image',`url(${url})`)
+            })
+            $colorInput.on('change',function(e){
+                let $this = $(this)
+                currentElement.color = $this.val();
+            })
+            $bgColorInput.on('change',function(e){
+                let $this = $(this)
+                $canvas.css('background-color',$this.val())
+            })
             $('.tool-bar').on('click','.add-img,.add-txt',function(){
                //  ...
             }).on('click','.img-scale',function(){
@@ -406,10 +558,21 @@
                 let newEle = new Txt()
                 elementArr.push(newEle)
                 setCurrent(newEle)
+            }).on('click','.add-bgImg',function(){
+                $bgImgInput[0].click()
+            }).on('click','.add-bgColor',function(){
+                $bgColorInput[0].click()
             }).on('click','.txt-plus',function(){
                 currentElement.fontPlus()
             }).on('click','.txt-minus',function(){
                 currentElement.fontMinus()
+            }).on('click','.txt-color',function(){
+                $colorInput[0].click();
+            }).on('click','.bg-delete',function(){
+                $canvas.css('background-image','none')
+                        .css('background-color','#fff')
+            }).on('click','.ele-delete',function(){
+                currentElement && currentElement.remove()
             })
             var selectionStart = 0;
             var prev_length = 0;
@@ -422,6 +585,12 @@
             }).on('change','.txt-height',function(){
                 let $this= $(this)
                 currentElement.height = $this.val()
+            }).on('change','.txt-lineHeight',function(){
+                let $this= $(this)
+                currentElement.lineHeight = $this.val()
+            }).on('change','.txt-fontWeight',function(){
+                let $this= $(this)
+                currentElement.fontWeight = $this.val()
             })
         })  
 
