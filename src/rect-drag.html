@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html style="height:100%">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>drag-rectange</title>
+    <link rel="stylesheet" type="text/css" href="./index.css">
+    <style type="text/css">
+        :root{
+            --palette-width: 250px;
+        }
+        div,textarea{
+            box-sizing: border-box;
+        }
+        ul li{
+            text-align: center;
+            margin-bottom:1em;
+        }
+        a{
+            text-decoration: none;
+            cursor:pointer;
+            display: inline-block;min-width: 1.2em;
+            user-select: none;
+        }
+        a:active i{
+             font-size:0.9em;
+        }
+        #img-tool,#txt-tool{
+            width:100%;
+            top:200px;
+            -webkit-transform:translateY(-70px);
+            opacity: 0.2;
+            position:absolute;
+            height: 0;
+            overflow: hidden;
+            transition:height 0.5s cubic-bezier(0.42,0,1,1),transform 0.4s cubic-bezier(0.42,0,1,1),opacity 0.5s cubic-bezier(0.42,0,1,1);
+        }
+        #txt-tool{
+            top:400px;
+        }
+        
+        .text-clip{
+            -webkit-background-clip: text;
+            color:transparent;
+        }
+        .text-bottom-gradient{
+            background:linear-gradient(to top, var(--green),var(--orange) 15%, #fff 20%, #fff);
+            -webkit-background-clip: text;
+            color:transparent;
+        }
+        input[type='number']{
+            display: inline-block;
+            width:50px;
+           
+        }
+        .text-center{
+             text-align: center;
+        }
+        .canvas-content{
+            background-color: #f5fcff;
+        }
+        .absolute-center{
+            position:absolute;left:50%;top:50%;
+            transform: translate(-50%,-50%);
+        }
+        .bgi-normal{
+            background-size: 100% 100%;
+            background-position: center center;
+            background-repeat: no-repeat;
+        }
+        .tool-bar[data-current='img'] #img-tool{
+            display: block;
+            height:200px;
+            opacity: 1;
+             -webkit-transform:translateY(0px);
+        }
+
+        .tool-bar[data-current='txt'] #txt-tool{
+            display: block;
+            height:200px;
+            opacity: 1;
+             -webkit-transform:translateY(0px);
+        }
+        .tool-bar[data-current='txt'] + .left{
+            left: -250px;
+            margin-left:250px;
+        }
+        .left{
+           transition:left .3s cubic-bezier(0.42,0,1,1),margin .3s cubic-bezier(0.42,0,1,1);
+           box-sizing: content-box;
+           left:0;
+           margin-left:0;
+        }
+        .focus-ele{
+            outline: var(--assertive) 1px dashed;
+        }
+        .txt-palette{
+            width:var(--palette-width);
+            box-sizing: border-box;
+            border-right:var(--gray-800) 2px solid;
+        }
+        .txt-palette .txt-text{
+            background-color: var(--gray-900);
+            color:var(--light);
+
+            border:none;
+            border-bottom:2px var(--black) solid;
+            font-size: 20px;line-height: 1;height:100px;
+        }
+        .txt-palette ul li{
+            height: 50px;
+            line-height: 50px;
+            vertical-align: center;
+            padding:10px 20px;
+            margin:0;
+            border-bottom:2px var(--black) solid;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .txt-palette ul li span{
+            line-height: 25px;
+
+        }
+        .txt-palette ul li input{
+            width:120px;
+            transform:translateY(4px);
+        }
+    </style>
+</head>
+
+<body class='p-0 m-0 h-100 lump-blue position-relative' style='overflow:hidden;'>
+    
+    <div class='tool-bar m-0 pt-4 h-100 bg-black position-absolute' style='width:100px;right:0;top:0;box-sizing: border-box;overflow:hidden;z-index:99;' data-current=''>
+        <ul  style='font-size: 30px;'>
+            <li>
+                <a class='add-img' data-href='img' style='overflow:hidden;'>
+                    <i class='iconfont text-white'>&#xe610;</i>
+                    <input type="file" name="img-select" accept="image/*" class='position-absolute' style='opacity:0;width:0;height:0'/>
+                </a>
+            </li>
+            <li>
+                <a class='add-txt' data-href='txt'><i class='iconfont text-white'>&#xe89b;</i></a>
+            </li>
+        </ul>
+        <ul id='img-tool' style='font-size: 30px;'>
+            <li>
+                <a class='img-scale' data-type='plus'><i class='iconfont text-white'>&#xe6f6;</i></a>
+            </li>
+            <li>
+                <a class='img-scale' data-type='minus'><i class='iconfont text-white'>&#xe794;</i></a>
+            </li>
+        </ul>
+        <ul id='txt-tool' style='font-size: 30px;'>
+            <li>
+                <a class='txt-plus'><i class='iconfont text-white'>&#xe635;</i></a>
+            </li>
+            <li>
+                <a class='txt-minus'><i class='iconfont text-white'>&#xe633;</i></a>
+            </li>
+            <li>
+                <a><i class='iconfont text-bottom-gradient text-clip '>&#xe60f;</i></a>
+            </li>
+        </ul>
+    </div>
+    <div class='left h-100 bg-cyan position-relative' style='margin-right:100px;'>
+        <p class='m-0 text-center'>
+            画布尺寸: 宽 <input type="number" name="width" value="800" />×
+            高 <input type="number" name="height" value='600'/>
+        </p>
+        <div class="canvas-content bgi-normal absolute-center"  style="text-align:center">
+            
+        </div>
+        <div class='txt-palette position-absolute bg-gray-900' style='left:100%;top:0;height:100%;'>
+            <textarea class='txt-text w-100 ' >
+                
+            </textarea>
+            
+            <ul class=' text-white'>
+               <li>
+                    宽度
+                    <input class='txt-width' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <span class='txt-width-info'></span>
+                </li> 
+               <li> 
+                    高度
+                    <input class='txt-height' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <span class='txt-height-info'></span>
+                </li> 
+            </ul>
+        </div>
+    </div>
+    <div class='fake-dom position-absolute' style='top:0;left:0;width:200px;height:200px;z-index:-999;opacity:0;'>
+        <!-- <img src='' class='fake-img' style='position:absolue;opacity:0;z-index:-999' /> -->
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="./jquery.panzoom.js"></script>
+    <script type="text/javascript">
+        // 最终的对象集合
+        const elementArr = []
+        var currentElement; 
+        class ele{
+            focus(){
+               currentElement = this;
+               this.dom && this.dom.addClass('focus-ele')
+
+               this.dom && $('.tool-bar').attr('data-current',this.type)
+            }
+            blur(){
+                this.dom && this.dom.removeClass('focus-ele')
+            }
+        }
+
+        class Img extends ele {
+            constructor(url='',width=200,height=200,maxScale=1.5){
+                super()
+                this.type = 'img'
+                this.url = url
+                this.width = width
+                this.height = height
+                this.maxScale = maxScale
+                this.init()
+            }
+            init(){
+                let that = this
+                this.dom = $(`<div class='bgi-normal position-absolute ' style='background-image:url(${this.url})'> </div>`).css('width',this.width).css('height',this.height)
+                    .on('click',function(){
+                        setCurrent(that)
+                    })
+                this.dom.appendTo($('.canvas-content'))
+                this.pz = this.dom.panzoom({
+                    startTransform: 'scale(1)',
+                      maxScale: this.maxScale,
+                      increment: 0.2,
+                      contain:true,
+                      minScale: 0.4,
+                      disableZoom: false
+                })
+                
+            }
+
+
+        }
+
+        class Txt extends ele{
+            constructor(text='点击添加\n\r文本信息',width=200,height=30){
+                super()
+                this.type='txt'
+                this.text = text
+                this.width = width
+                this.height = height
+                this.fontStyle = 'normal'
+                this.fontVariant = 'normal'
+                this.fontWeight = 700
+                this.lineHeight = 1.24 
+                this.fontSize = 20
+                this.fontFamily = "Microsoft YaHei"
+                this.init()
+            }
+            init(){
+                let that = this
+                this.dom = $(`<div class='bgi-normal position-absolute ' style='overflow:hidden'>${this.text} </div>`)
+                    .css('width',this.width).css('height',this.height)
+                    .on('click',function(){
+                        setCurrent(that)
+                    })
+                this.setFont();
+                console.log('font',this.dom.css('font'))
+                this.dom.appendTo($('.canvas-content'))
+                this.pz = this.dom.panzoom({
+                      startTransform: 'scale(1)',
+                      increment: 0.2,
+                      contain:true,
+                      minScale: 0.4,
+                      disableZoom: true,
+                })
+            }
+            set text(val){
+                this.dom && this.dom.html(val)
+                this.init_flag || $('.txt-palette .txt-text').text(val)
+                this.init_flag = true
+                this._text = val
+
+            }
+            get text(){
+                return this._text
+            }
+            set width(val){
+
+                if(val!=='auto'){
+                    $('.txt-palette').find('.txt-width').val(val).end()
+                    .find('.txt-width-info').text(val)
+                    
+                }
+                this.dom && this.dom.css('width',val + 'px')
+                           
+                this._width = val
+            }
+            get width(){
+                return this._width;
+            }
+            set height(val){
+
+                if(val!=='auto'){
+                    $('.txt-palette').find('.txt-height').val(val).end()
+                    .find('.txt-height-info').text(val)
+                    
+                }
+                this.dom && this.dom.css('height',val + 'px')
+                           
+                this._height = val
+            }
+            get height(){
+                return this._height;
+            }
+            
+            fontPlus(){
+                this.fontSize += 1
+                this.setFont()
+            }
+            fontMinus(){
+                this.fontSize = Math.max(this.fontSize-1,12)
+                this.setFont()
+            }
+            setFont(){
+                console.log('ft',`${this.fontStyle} ${this.fontVariant} ${this.fontWeight} ${this.fontSize}/${this.lineHeight} ${this.fontFamily}`)
+                this.dom.css({
+                    "font-style":this.fontStyle,
+                    "font-variant":this.fontVariant,
+                    "font-weight":this.fontWeight,
+                    "font-size":this.fontSize,
+                    "line-height":this.lineHeight,
+                    "font-family":this.fontFamily
+                })
+
+            }
+
+        }
+
+        $(function(){
+            
+
+            const $widthInput = $("input[name='width']")
+            const $heightInput = $("input[name='height']")
+            const $imgInput = $("input[name='img-select']")
+            const $canvas = $('.canvas-content')
+            var canvasW,
+                canvasH;
+
+            $("input[name='width'],input[name='height']").on('change',function(){
+                canvasW = $widthInput.val()
+                canvasH = $heightInput.val()
+                $canvas.css({'width':canvasW,'height':canvasH})
+                $('.txt-width').prop('max',canvasW)
+                $('.txt-height').prop('max',canvasH)
+            }).trigger('change')
+            
+            $imgInput.on('change',function(e){
+              if(e.target.files[0])
+              var url = createObjectURL(e.target.files[0])
+              console.log(e.target.files[0])
+              console.log(url)
+              var $fakeImg = $(new Image())
+              $fakeImg.prop('src',url);
+              $fakeImg.one('load',function(){
+                // 获取了url width height 就可以 插入一个 img 对象了
+                let width = this.width 
+                let height = this.height
+                var maxScale;
+                var ratio = width/height
+                // 宽高比 大 按宽计算
+                if(ratio >= canvasW/canvasH){
+                   
+                    width = Math.min(canvasW*0.6,width) 
+                    height = width/ratio
+                    maxScale = canvasW/width
+                   
+                }else{
+                    height = Math.min(canvasH*0.6,height) 
+                    width = height*ratio
+                    maxScale = canvasH/height
+                }
+                console.log(url,width,height,maxScale)
+                let newEle = new Img(url,width,height,maxScale)
+                elementArr.push(newEle)
+                setCurrent(newEle)
+                // 生成完成后 将 $imgInput清空
+                $imgInput.val("")
+               })
+            })
+
+            $('.tool-bar').on('click','.add-img,.add-txt',function(){
+               //  ...
+            }).on('click','.img-scale',function(){
+                let $this = $(this)
+                let type = $this.attr('data-type')
+                if(type=='plus'){
+                    currentElement.dom.panzoom("zoom")
+                }else{
+                    currentElement.dom.panzoom("zoom",true)
+                }
+            }).on('click','.add-img',function(){
+                $imgInput[0].click();
+            }).on('click','.add-txt',function(){
+                let newEle = new Txt()
+                elementArr.push(newEle)
+                setCurrent(newEle)
+            }).on('click','.txt-plus',function(){
+                currentElement.fontPlus()
+            }).on('click','.txt-minus',function(){
+                currentElement.fontMinus()
+            })
+            var selectionStart = 0;
+            var prev_length = 0;
+            $('.txt-palette').on('input','.txt-text',function(){
+                let $this= $(this)
+                currentElement.text = $this.val()
+            }).on('change','.txt-width',function(){
+                let $this= $(this)
+                currentElement.width = $this.val()
+            }).on('change','.txt-height',function(){
+                let $this= $(this)
+                currentElement.height = $this.val()
+            })
+        })  
+
+        function setCurrent(ele){
+            elementArr.map(item => item.blur())
+            ele.focus()
+        }
+        function createObjectURL(blob){
+               if(window.URL){
+                   return window.URL.createObjectURL(blob);
+               }else if(window.webkitURL){
+                   return window.webkitURL.createObjectURL(blob);
+               }
+                   return null;
+        }
+
+
+    </script>
+</body>
+
+</html>
