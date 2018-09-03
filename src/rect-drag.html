@@ -141,7 +141,7 @@
             box-sizing: border-box;
             border-right:var(--gray-800) 2px solid;
         }
-        .txt-pallette{
+        .txt-palette{
             z-index:99;
         }
         .imgVar-palette{
@@ -184,7 +184,7 @@
 
 <body class='p-0 m-0 h-100 lump-blue position-relative' style='overflow:hidden;'>
     
-    <div class='tool-bar m-0 h-100 bg-black position-absolute' style='width:100px;right:0;top:0;box-sizing: border-box;overflow:hidden;z-index:99;' data-current=''>
+    <div class='tool-bar m-0 h-100 bg-black position-absolute' style='width:100px;right:0;top:0;box-sizing: border-box;overflow:hidden;z-index:9999;' data-current=''>
         <ul id='main-tool' class='pt-4 border-bottom border-gray-900' style='font-size: 30px;'>
             <li>
                 <a class='add-img' data-href='img' style='overflow:hidden;'>
@@ -258,13 +258,13 @@
             <ul class='text-white'>
                <li>
                     宽度
-                    <input class='txt-width' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
-                    <span class='txt-width-info'></span>
+                    <input class='imgVar-width' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <span class='imgVar-width-info'></span>
                 </li> 
                <li> 
                     高度
-                    <input class='txt-height' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
-                    <span class='txt-height-info'></span>
+                    <input class='imgVar-height' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <span class='imgVar-height-info'></span>
                 </li>
             </ul>
         </div>
@@ -294,6 +294,10 @@
                     <input class='txt-fontWeight' type='range' id="rotateRatio" min='100' max='900' step='100'/>
                     <span class='txt-fontWeight-info'></span>
                 </li> 
+                
+                <li class='border-0 position-absolute w-100 ' style="text-align: center;padding: 0;bottom:50px">
+                    <a class='link-txt'><i class='iconfont text-white'>&#xe62a;</i> 链接动态文字</a>
+                </li>
             </ul>
         </div>
     </div>
@@ -365,6 +369,13 @@
                  .find('.txt-fontWeight-info').text(this.fontWeight).end()
 
                }
+               if(this.type == 'image-var'){
+                    $('.imgVar-palette').find('.imgVar-text').val(this.text).end()   
+                    .find('.imgVar-height').val(this.height).trigger('change').end()
+                    .find('.imgVar-height-info').text(this.height).end()
+                    .find('.imgVar-width').val(this.width).trigger('change').end()
+                    .find('.imgVar-width-info').text(this.width).end()
+               }
             }
             remove(){
                 let index = elementArr.indexOf(this)
@@ -386,8 +397,9 @@
 
                 this.linkType = link.type
                 this.linkKey = link.key 
-
-                this.text = link.key
+                console.log(link)
+                this.text += link.key
+                $('.txt-palette').find('.txt-text').val(this.text)
             }
             blur(){
                 this.dom && this.dom.removeClass('focus-ele')
@@ -471,6 +483,34 @@
                     disableZoom: true,
                 })
                 
+            }
+            set width(val){
+
+                if(val!=='auto'){
+                    $('.imgVar-palette').find('.imgVar-width').val(val).end()
+                    .find('.imgVar-width-info').text(val)
+                    
+                }
+                this.dom && this.dom.css('width',val + 'px')
+                           
+                this._width = val
+            }
+            get width(){
+                return this._width;
+            }
+            set height(val){
+
+                if(val!=='auto'){
+                    $('.imgVar-palette').find('.imgVar-height').val(val).end()
+                    .find('.imgVar-height-info').text(val)
+                    
+                }
+                this.dom && this.dom.css('height',val + 'px')
+                           
+                this._height = val
+            }
+            get height(){
+                return this._height;
             }
         } 
 
@@ -574,6 +614,7 @@
                 return this._fontWeight;
             }
             
+            
             fontPlus(){
                 this.fontSize += 1
                 this.setFont()
@@ -643,8 +684,8 @@
                 canvasW = $widthInput.val()
                 canvasH = $heightInput.val()
                 $canvas.css({'width':canvasW,'height':canvasH})
-                $('.txt-width').prop('max',canvasW)
-                $('.txt-height').prop('max',canvasH)
+                $('.txt-width,.imgVar-width').prop('max',canvasW)
+                $('.txt-height,.imgVar-height').prop('max',canvasH)
             }).trigger('change')
             
             $imgInput.on('change',function(e){
@@ -738,6 +779,10 @@
                 $('.link-palette').hide()
                 newEle.focus()
 
+            }).on('click','.link-txt',function(){
+                currentElement.link($(this).attr('data-key'))
+                $('.link-palette').hide()
+
             })
 
             var selectionStart = 0;
@@ -757,6 +802,15 @@
             }).on('change','.txt-fontWeight',function(){
                 let $this= $(this)
                 currentElement.fontWeight = $this.val()
+            }).on('click','.link-txt',function(){
+                $('.link-palette').attr('data-type','txt').show()
+            })
+            $('.imgVar-palette').on('change','.imgVar-width',function(){
+                let $this= $(this)
+                currentElement.width = $this.val()
+            }).on('change','.imgVar-height',function(){
+                let $this= $(this)
+                currentElement.height = $this.val()
             })
         })  
         function serialize(){
