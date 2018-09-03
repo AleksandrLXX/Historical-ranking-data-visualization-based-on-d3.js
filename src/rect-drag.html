@@ -43,7 +43,7 @@
         }
         ul li{
             text-align: center;
-            margin-bottom:1em;
+            margin-bottom:0.8em;
         }
         a{
             text-decoration: none;
@@ -56,7 +56,7 @@
         }
         #img-tool,#txt-tool{
             width:100%;
-            top:350px;
+            top:300px;
             -webkit-transform:translateY(-70px);
             opacity: 0.2;
             position:absolute;
@@ -67,10 +67,10 @@
         #delete-tool{
             width:100%;
             position:absolute;
-            bottom:50px;
+            bottom:0px;
         }
         #txt-tool{
-            top:500px;
+            top:450px;
         }
         
         .text-clip{
@@ -120,23 +120,32 @@
             opacity: 1;
              -webkit-transform:translateY(0px);
         }
-        .tool-bar[data-current='txt'] + .left{
-            left: -250px;
-            margin-left:250px;
+        .tool-bar[data-current='txt'] + .left,.tool-bar[data-current='image-var'] + .left{
+            margin-right:350px;
+        }
+        .tool-bar[data-current='image-var'] + .left .imgVar-palette{
+            z-index: 999;
         }
         .left{
            transition:left .3s cubic-bezier(0.42,0,1,1),margin .3s cubic-bezier(0.42,0,1,1);
            box-sizing: content-box;
            left:0;
+           margin-right:100px;
            margin-left:0;
         }
         .focus-ele{
             outline: var(--assertive) 1px dashed;
         }
-        .txt-palette{
+        .txt-palette,.imgVar-palette{
             width:var(--palette-width);
             box-sizing: border-box;
             border-right:var(--gray-800) 2px solid;
+        }
+        .txt-pallette{
+            z-index:99;
+        }
+        .imgVar-palette{
+            z-index:9;
         }
         .txt-palette .txt-text{
             background-color: var(--gray-900);
@@ -146,7 +155,7 @@
             border-bottom:2px var(--black) solid;
             font-size: 20px;line-height: 1;height:100px;
         }
-        .txt-palette ul li{
+        .txt-palette ul li,.imgVar-palette ul li{
             height: 50px;
             line-height: 50px;
             vertical-align: center;
@@ -156,13 +165,19 @@
             text-align: left;
             white-space: nowrap;
         }
-        .txt-palette ul li span{
+        .txt-palette ul li span,.imgVar-palette ul li span{
             line-height: 25px;
 
         }
-        .txt-palette ul li input{
+        .txt-palette ul li input,.imgVar-palette ul li input{
             width:120px;
             transform:translateY(-5px);
+        }
+        .link-palette[data-type='img'] li[data-type='txt']{
+            display: none;
+        }
+        .link-palette[data-type='txt'] li[data-type='img']{
+            display: none;
         }
     </style>
 </head>
@@ -173,7 +188,7 @@
         <ul id='main-tool' class='pt-4 border-bottom border-gray-900' style='font-size: 30px;'>
             <li>
                 <a class='add-img' data-href='img' style='overflow:hidden;'>
-                    <i class='iconfont text-white'>&#xe617;</i>
+                    <i class='iconfont text-white'>&#xe610;</i>
                     <input type="file" name="img-select" accept="image/*" class='position-absolute' style='opacity:0;width:0;height:0'/>
                 </a>
             </li>
@@ -181,17 +196,15 @@
                 <a class='add-txt' data-href='txt'><i class='iconfont text-white'>&#xe89b;</i></a>
             </li>
             <li>
+                <a class='add-linkImg'><i class='iconfont text-white'>&#xe621;</i></a>
+            </li>
+            <li>
                 <a class='add-bgImg' >
-                    <i class='iconfont text-white'>&#xe610;</i>
+                    <i class='iconfont text-white'>&#xe77f;</i>
                     <input type="file" name="bgImg-select" accept="image/*" class='position-absolute' style='opacity:0;width:0;height:0'/>
                 </a>
             </li>
-            <li>
-                <a class='add-bgColor'>
-                    <i class='iconfont text-white'>&#xe606;</i>
-                    <input type="color" name="bgColor-select"  class='position-absolute' style='opacity:0;width:0;height:0'/>
-                </a>
-            </li>
+            
         </ul>
         <ul id='img-tool' style='font-size: 30px;'>
             <li>
@@ -201,9 +214,6 @@
                 <a class='img-scale' data-type='minus'><i class='iconfont text-white'>&#xe794;</i></a>
             </li>
 
-            <li>
-                <a class='img-layer' data-type='low'><i class='iconfont text-white'>&#xe638;</i></a>
-            </li>
         </ul>
         <ul id='txt-tool' style='font-size: 30px;'>
             <li>
@@ -220,21 +230,43 @@
             </li>
         </ul>
         <ul id='delete-tool' class='pt-4 border-top border-gray-900' style='font-size: 30px;'>
+            
             <li>
-                <a class='bg-delete'><i class='iconfont text-white'>&#xe63a;</i></a>
+                <a class='ele-layer' data-type='low'>
+                    <i class='iconfont text-white'>&#xe638;</i>
+                </a>
+            </li>
+            <li>
+                <a class='bg-delete'><i class='iconfont text-white'>&#xe601;</i></a>
             </li>
             <li>
                 <a class='ele-delete'><i class='iconfont text-white'>&#xe616;</i></a>
             </li>
         </ul>
     </div>
-    <div class='left h-100 bg-cyan position-relative' style='margin-right:100px;'>
+    <div class='left h-100 bg-cyan position-relative' >
         <p class='m-0 text-center'>
             画布尺寸: 宽 <input type="number" name="width" value="800" />×
             高 <input type="number" name="height" value='600'/>
         </p>
-        <div class="canvas-content bgi-center absolute-center"  style="text-align:center">
+        <div class="canvas-content bgi-normal absolute-center"  style="text-align:center">
             
+        </div>
+
+        <div class='imgVar-palette position-absolute bg-gray-900' style='left:100%;top:0;height:100%;'>
+            
+            <ul class='text-white'>
+               <li>
+                    宽度
+                    <input class='txt-width' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <span class='txt-width-info'></span>
+                </li> 
+               <li> 
+                    高度
+                    <input class='txt-height' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <span class='txt-height-info'></span>
+                </li>
+            </ul>
         </div>
         <div class='txt-palette position-absolute bg-gray-900' style='left:100%;top:0;height:100%;'>
             <textarea class='txt-text w-100 ' >
@@ -268,13 +300,53 @@
     <div class='fake-dom position-absolute' style='top:0;left:0;width:200px;height:200px;z-index:-999;opacity:0;'>
         <!-- <img src='' class='fake-img' style='position:absolue;opacity:0;z-index:-999' /> -->
     </div>
+    <div class="link-palette absolute-center bg-gray-900 shadow-lg text-white" style='overflow:auto;max-height:800px;width: 400px;z-index:999;display:none;' data-type=''>
+        <p class='text-center my-2' style="font-size: 22px">
+            请选择填充内容
+        </p> 
+        <ul class='position-relative px-4  text-white' style='font-size: 25px;'>
+            
+        </ul>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="./jquery.panzoom.js"></script>
     <script type="text/javascript">
+        var linkDic = [{
+            type:'txt',
+            key:'userName',
+        },{
+            type:'txt',
+            key:'location',
+        },{
+            type:'img',
+            key:'userAvatar',
+        },{
+            type:'txt',
+            key:'userName',
+        },{
+            type:'txt',
+            key:'location',
+        },{
+            type:'img',
+            key:'userAvatar',
+        },{
+            type:'txt',
+            key:'userName',
+        },{
+            type:'txt',
+            key:'location',
+        },{
+            type:'img',
+            key:'userAvatar',
+        },{
+            type:'img',
+            key:'logo'
+        }]
         // 最终的对象集合
         const elementArr = []
         var currentElement; 
+        
         class ele{
             focus(){
                currentElement = this;
@@ -299,11 +371,43 @@
                 elementArr.splice(index,1)
                 this.dom && this.dom.remove();
                 currentElement = null;
-               $('.tool-bar').attr('data-current','')
+                $('.tool-bar').attr('data-current','')
+            }
+            toLayerBottom(){
+                let index = elementArr.indexOf(this)
+                // 将这个元素提到最前
+                elementArr.splice(0,0,elementArr.splice(index,1)[0])
+                elementArr.map((item,index)=>{
+                    item.zIndex = (index+1)*100
+                })
+            }
+            link(key){
+                let link = linkDic.find(item => item.key==key)
+
+                this.linkType = link.type
+                this.linkKey = link.key 
+
+                this.text = link.key
             }
             blur(){
                 this.dom && this.dom.removeClass('focus-ele')
+            }
+            set zIndex(val){
+                this.dom && this.dom.css('z-index',val)
+                this._zIndex = val
+            }
+            get zIndex(){
+                let index = elementArr.indexOf(this)>-1?elementArr.indexOf(this) + 1:elementArr.length
+                this._zIndex = index*100
+                return this._zIndex;
+            }
+            set text(val){
+                this.dom && this.dom.html(val)
+                this._text = val
 
+            }
+            get text(){
+                return this._text
             }
         }
 
@@ -319,7 +423,9 @@
             }
             init(){
                 let that = this
-                this.dom = $(`<div class='bgi-normal position-absolute ' style='background-image:url(${this.url})'> </div>`).css('width',this.width).css('height',this.height)
+                this.dom = $(`<div class='bgi-normal position-absolute ' style='background-image:url(${this.url})'> </div>`)
+                    .css('width',this.width).css('height',this.height)
+                    .css('z-index',this.zIndex)
                     .on('click',function(){
                         setCurrent(that)
                     })
@@ -334,9 +440,39 @@
                 })
                 
             }
-
-
         }
+        class ImageVar extends ele{
+            constructor(url,width=200,height=200,maxW,maxH){
+                super()
+                this.type = 'image-var'
+                this.text = url
+                this.src = url
+                this.width = width
+                this.height = height
+                this.maxW = maxW
+                this.maxH = maxH
+                this.init()
+            }
+            init(){
+                let that = this
+                this.dom = $(`<div class='bgi-normal position-absolute ' style='background-image:url(data:image/png;base64,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)'> </div>`)
+                    .css('width',this.width).css('height',this.height)
+                    .css('z-index',this.zIndex)
+                    .html(`<div class='absolute-center text-shadow text-white'>${this.text}</div>`)
+                    .on('click',function(){
+                        setCurrent(that)
+                    })
+                this.dom.appendTo($('.canvas-content'))
+                this.pz = this.dom.panzoom({
+                    startTransform: 'scale(1)',
+                    increment: 0.2,
+                    contain:true,
+                    minScale: 0.4,
+                    disableZoom: true,
+                })
+                
+            }
+        } 
 
         class Txt extends ele{
             constructor(text='点击添加\n\r文本信息',width=200,height=30){
@@ -357,6 +493,7 @@
                 let that = this
                 this.dom = $(`<div class='bgi-normal position-absolute ' style='overflow:hidden'>${this.text} </div>`)
                     .css('width',this.width).css('height',this.height)
+                    .css('z-index',this.zIndex)
                     .on('click',function(){
                         setCurrent(that)
                     })
@@ -371,14 +508,7 @@
                       disableZoom: true,
                 })
             }
-            set text(val){
-                this.dom && this.dom.html(val)
-                this._text = val
-
-            }
-            get text(){
-                return this._text
-            }
+            
             set color(val){
                 this.dom && this.dom.css('color',val)
                 this._color = val
@@ -479,6 +609,27 @@
             const $canvas = $('.canvas-content')
             var canvasW,
                 canvasH;
+
+            $('.link-palette').find('ul').html(function(){
+
+                return linkDic.map(item=>{
+                 return item.type=='img'?`<li data-type='${item.type}' class='py-2 m-0 border-top border-gray-800'>
+                            <a class='link-img w-100' data-key='${item.key}' style='overflow:hidden;text-align:left'>
+                                <i class='iconfont'> &#xe610; </i>
+                                <span class='ml-4' style="font-size: 0.8em;">
+                                    ${item.key}
+                                </span>
+                            </a>
+                        </li>`: `<li data-type='${item.type}' class='py-2 m-0 border-top border-gray-800'>
+                            <a class='link-txt w-100' data-key='${item.key}' style='overflow:hidden;text-align:left'>
+                                <i class='iconfont'> &#xe89b; </i>
+                                <span class='ml-4' style="font-size: 0.8em;">
+                                   ${item.key}
+                                </span>
+                            </a>
+                        </li>` 
+                }).join('')
+            })
             $("input[type='range']").on('change',function(){
                 let $this = $(this)
                 var value = $this.val()/ Number($this.prop('max')) * 100;
@@ -554,6 +705,8 @@
                 }
             }).on('click','.add-img',function(){
                 $imgInput[0].click();
+            }).on('click','.add-linkImg',function(){
+                $('.link-palette').attr('data-type','img').show()
             }).on('click','.add-txt',function(){
                 let newEle = new Txt()
                 elementArr.push(newEle)
@@ -572,8 +725,21 @@
                 $canvas.css('background-image','none')
                         .css('background-color','#fff')
             }).on('click','.ele-delete',function(){
-                currentElement && currentElement.remove()
+                currentElement ? currentElement.remove():alert('请先选择要删除的文字或图片')
+            }).on('click','.ele-layer',function(){
+                currentElement ? currentElement.toLayerBottom():alert('请先选择要置于底层的文字或图片')
+            }).on('click','.ele-link',function(){
+                currentElement ? $('.link-palette').show():alert('请先选择要填充链接内容的文字或图片')
             })
+
+            $('.link-palette').on('click','.link-img',function(){
+                let newEle = new ImageVar($(this).attr('data-key'),200,200,canvasW,canvasH)
+                elementArr.push(newEle)
+                $('.link-palette').hide()
+                newEle.focus()
+
+            })
+
             var selectionStart = 0;
             var prev_length = 0;
             $('.txt-palette').on('input','.txt-text',function(){
@@ -593,6 +759,9 @@
                 currentElement.fontWeight = $this.val()
             })
         })  
+        function serialize(){
+
+        }
 
         function setCurrent(ele){
             elementArr.map(item => item.blur())
