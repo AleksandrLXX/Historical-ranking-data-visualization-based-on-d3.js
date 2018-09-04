@@ -179,6 +179,10 @@
         .link-palette[data-type='txt'] li[data-type='img']{
             display: none;
         }
+        .real-view{
+            transform:scale(0.3779) translate(-50%,-50%);
+            transform-origin:left top;
+        }
     </style>
 </head>
 
@@ -246,8 +250,12 @@
     </div>
     <div class='left h-100 bg-cyan position-relative' >
         <p class='m-0 text-center'>
-            画布尺寸: 宽 <input type="number" name="width" value="800" />×
-            高 <input type="number" name="height" value='600'/>
+            画布尺寸: 宽 <input type="number" name="width" value="856" />×
+            高 <input type="number" name="height" value='539.8'/>
+            <a class='shuffer-canvas btn btn-main shadow px-2 py-1 m-1'>切换视图</a>
+            <a class='iconfont radius-plus text-white btn btn-main shadow rounded-lg p-1 m-1' style='font-size: 1.8em'>&#xe6a1;</a>
+            <a class='iconfont radius-minus text-white btn btn-main shadow rounded-sm p-1 m-1' style='font-size: 1.8em'>&#xe604;</a>
+
         </p>
         <div class="canvas-content bgi-normal absolute-center"  style="text-align:center">
             
@@ -294,6 +302,10 @@
                     <input class='txt-fontWeight' type='range' id="rotateRatio" min='100' max='900' step='100'/>
                     <span class='txt-fontWeight-info'></span>
                 </li> 
+                <li> 
+                    字体
+                    <select class='txt-fontFamily' style='font-size: 18px;width:150px;margin-left:10px'/></select>
+                </li> 
                 
                 <li class='border-0 position-absolute w-100 ' style="text-align: center;padding: 0;bottom:50px">
                     <a class='link-txt'><i class='iconfont text-white'>&#xe62a;</i> 链接动态文字</a>
@@ -315,6 +327,18 @@
 
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="./jquery.panzoom.js"></script>
+    <script src="font-ch-en.js" type="text/javascript" charset="utf-8"></script>
+    <script src="isSupportFontFamily.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+        var arrFont = dataFont['windows'];
+        const supportFontFamily = []
+        arrFont.forEach(function (obj) {
+            let  fontFamily = obj.en
+            if(isSupportFontFamily(fontFamily)){
+                supportFontFamily.push(obj)
+            }
+        });
+    </script>
     <script type="text/javascript">
         var linkDic = [{
             type:'txt',
@@ -351,6 +375,34 @@
         const elementArr = []
         var currentElement; 
         
+        // Regex
+        
+        var floating = '(\\-?\\d[\\d\\.e-]*)';
+        var commaSpace = '\\,?\\s*';
+        var rmatrix = new RegExp(
+            '^matrix\\(' +
+            floating + commaSpace +
+            floating + commaSpace +
+            floating + commaSpace +
+            floating + commaSpace +
+            floating + commaSpace +
+            floating + '\\)$'
+        );
+        const getMatrix = function(transform) {
+            var matrix = rmatrix.exec(transform);
+            if (matrix) {
+                matrix.shift();
+            }
+            return matrix || [ 1, 0, 0, 1, 0, 0 ];
+        }
+        function getBase64Image(img,width,height) {  
+             var canvas = document.createElement("canvas");  
+             var ctx = canvas.getContext("2d");  
+             ctx.drawImage(img, 0, 0, width, height);  
+             var ext = img.src.substring(img.src.lastIndexOf(".")+1).toLowerCase();  
+             var dataURL = canvas.toDataURL("image/"+ext);  
+             return dataURL;  
+        }  
         class ele{
             focus(){
                currentElement = this;
@@ -367,6 +419,7 @@
                  .find('.txt-lineHeight-info').text(this.lineHeight).end()
                  .find('.txt-fontWeight').val(this.fontWeight).trigger('change').end()
                  .find('.txt-fontWeight-info').text(this.fontWeight).end()
+                 .find('.txt-fontFamily').val(this.fontFamily).end()
 
                }
                if(this.type == 'image-var'){
@@ -403,6 +456,32 @@
             }
             blur(){
                 this.dom && this.dom.removeClass('focus-ele')
+            }
+            getDimension(){
+                let matrix = getMatrix(this.dom.css('transform'))
+                return {
+                    x : this.width * (1 - matrix[0])/2 + Number(matrix[4]),
+                    y : this.height * (1 - matrix[3])/2 + Number(matrix[5]),
+                    width:this.width * matrix[0],
+                    height:this.height * matrix[3],
+                }
+            }
+            
+            serialize(){
+                return Object.assign({
+                    elementType:this.type=="image-var"?"image-var":this.type=='txt'?"text":this.type=='img'?"image":'',
+                    type:this.type,
+                    backgroundImg:this.url,
+                    value:this.text,
+                    src:this.src,
+                    fontSize:this.fontSize,
+                    fontFamily:this.fontFamily,
+                    lineHeight:this.lineHeight,
+                    fontWeight:this.fontWeight,
+                    zIndex:this.zIndex,
+                    color:this.color
+
+                },this.getDimension())
             }
             set zIndex(val){
                 this.dom && this.dom.css('z-index',val)
@@ -526,7 +605,7 @@
                 this.fontWeight = 700
                 this.lineHeight = 1.24 
                 this.fontSize = 20
-                this.fontFamily = "Microsoft YaHei"
+                this.fontFamily = "Microsoft Yahei"
                 this.init()
             }
             init(){
@@ -613,6 +692,15 @@
             get fontWeight(){
                 return this._fontWeight;
             }
+            set fontFamily(val){
+
+                this.dom && this.dom.css('font-family',val)
+                           
+                this._fontFamily = val
+            }
+            get fontFamily(){
+                return this._fontFamily;
+            }
             
             
             fontPlus(){
@@ -637,7 +725,10 @@
             }
 
         }
-
+        var canvasW,
+            canvasH,
+            canvasBG,
+            canvasR=0;
         $(function(){
             
 
@@ -648,8 +739,19 @@
             const $bgImgInput = $("input[name='bgImg-select']")
             const $bgColorInput = $("input[name='bgColor-select']")
             const $canvas = $('.canvas-content')
-            var canvasW,
-                canvasH;
+            
+            $('.shuffer-canvas').on('click',function(){
+                $canvas.toggleClass('real-view')
+            })
+            $('.radius-plus').on('click',function(){
+                canvasR = Math.min(canvasW/2,canvasH/2,canvasR+1)
+                console.log(canvasR)
+                $canvas.css('border-radius',canvasR)
+            })
+            $('.radius-minus').on('click',function(){
+                canvasR = Math.max(0,canvasR-1)
+                $canvas.css('border-radius',canvasR)
+            })
 
             $('.link-palette').find('ul').html(function(){
 
@@ -671,6 +773,7 @@
                         </li>` 
                 }).join('')
             })
+
             $("input[type='range']").on('change',function(){
                 let $this = $(this)
                 var value = $this.val()/ Number($this.prop('max')) * 100;
@@ -690,9 +793,7 @@
             
             $imgInput.on('change',function(e){
               if(e.target.files[0])
-              var url = createObjectURL(e.target.files[0])
-              console.log(e.target.files[0])
-              console.log(url)
+             createObjectURL(e.target.files[0]).then(url=>{
               var $fakeImg = $(new Image())
               $fakeImg.prop('src',url);
               $fakeImg.one('load',function(){
@@ -713,18 +814,23 @@
                     width = height*ratio
                     maxScale = canvasH/height
                 }
-                console.log(url,width,height,maxScale)
                 let newEle = new Img(url,width,height,maxScale)
                 elementArr.push(newEle)
                 setCurrent(newEle)
                 // 生成完成后 将 $imgInput清空
                 $imgInput.val("")
                })
+                
+             })
+        
             })
             $bgImgInput.on('change',function(e){
               if(e.target.files[0])
-              var url = createObjectURL(e.target.files[0])
-              $canvas.css('background-image',`url(${url})`)
+               createObjectURL(e.target.files[0]).then(url=>{
+                  canvasBG = url
+                  $canvas.css('background-image',`url(${url})`)
+                
+               })
             })
             $colorInput.on('change',function(e){
                 let $this = $(this)
@@ -804,7 +910,17 @@
                 currentElement.fontWeight = $this.val()
             }).on('click','.link-txt',function(){
                 $('.link-palette').attr('data-type','txt').show()
-            })
+            }).on('change','.txt-fontFamily',function(){
+               let $this= $(this)
+
+                currentElement.fontFamily = $this.val()
+            }).find('.txt-fontFamily').html(function(){
+                return supportFontFamily.map(item=>{
+                    return `<option value='${item.en}' style='font-family:${item.en}'>${item.ch}</option>`
+                }).join('')
+            }).end()
+
+
             $('.imgVar-palette').on('change','.imgVar-width',function(){
                 let $this= $(this)
                 currentElement.width = $this.val()
@@ -814,14 +930,29 @@
             })
         })  
         function serialize(){
-
+            return {
+                "cardname":"杭州市社保卡",
+                width:canvasW,
+                height:canvasH,
+                borderRadius:canvasR,
+                backgroundImg:canvasBG,
+                context:elementArr.map(item=>item.serialize())
+            }
         }
 
         function setCurrent(ele){
             elementArr.map(item => item.blur())
             ele.focus()
         }
+
         function createObjectURL(blob){
+            return new Promise(function(res,rej){
+               var a = new FileReader();
+               a.onload = function(e) {res(e.target.result)};
+               a.readAsDataURL(blob);
+            })
+
+           // 转成 Object URl
                if(window.URL){
                    return window.URL.createObjectURL(blob);
                }else if(window.webkitURL){
