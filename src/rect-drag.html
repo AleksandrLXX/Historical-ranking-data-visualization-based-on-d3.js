@@ -249,18 +249,20 @@
         </ul>
     </div>
     <div class='left h-100 bg-cyan position-relative' >
+        <p class='main-title m-0 text-center text-white' style="font-size: 1.4em;font-weight: 600;"></p>
         <p class='m-0 text-center'>
-            画布尺寸: 宽 <input type="number" name="width" value="856" />×
-            高 <input type="number" name="height" value='539.8'/>
+            画布尺寸: 宽 <input type="number" disabled name="width" value="856" />×
+            高 <input type="number" name="height" disabled value='539.8'/>
             <a class='shuffer-canvas btn btn-main shadow px-2 py-1 m-1'>切换视图</a>
-            <a class='iconfont radius-plus text-white btn btn-main shadow rounded-lg p-1 m-1' style='font-size: 1.8em'>&#xe6a1;</a>
-            <a class='iconfont radius-minus text-white btn btn-main shadow rounded-sm p-1 m-1' style='font-size: 1.8em'>&#xe604;</a>
+            <!-- <a class='iconfont radius-plus text-white btn btn-main shadow rounded-lg p-1 m-1' style='font-size: 1.8em'>&#xe6a1;</a>
+            <a class='iconfont radius-minus text-white btn btn-main shadow rounded-sm p-1 m-1' style='font-size: 1.8em'>&#xe604;</a> -->
 
         </p>
-        <div class="canvas-content bgi-normal absolute-center"  style="text-align:center">
+        <div class="canvas-content bgi-normal absolute-center"  style="text-align:center;">
             
         </div>
-
+        <p class='position-info bg-black position-absolute text-white m-0'
+        style='bottom:2px;line-height: 1.14;'></p>
         <div class='imgVar-palette position-absolute bg-gray-900' style='left:100%;top:0;height:100%;'>
             
             <ul class='text-white'>
@@ -329,6 +331,7 @@
     <script src="./jquery.panzoom.js"></script>
     <script src="font-ch-en.js" type="text/javascript" charset="utf-8"></script>
     <script src="isSupportFontFamily.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../dist/result.js" type="text/javascript" charset="utf-8"></script>
     <script>
         var arrFont = dataFont['windows'];
         const supportFontFamily = []
@@ -373,6 +376,7 @@
         }]
         // 最终的对象集合
         const elementArr = []
+        var elementGroup =[]
         var currentElement; 
         
         // Regex
@@ -410,7 +414,7 @@
 
                this.dom && $('.tool-bar').attr('data-current',this.type)
                if(this.type== 'txt'){
-                 $('.txt-palette').find('.txt-text').val(this.text).end()   
+                 $('.txt-palette').find('.txt-text').val(this.text.replace(/&nbsp;/g,' ').replace(/<br\/>/g,'\n')).end()   
                  .find('.txt-height').val(this.height).trigger('change').end()
                  .find('.txt-height-info').text(this.height).end()
                  .find('.txt-width').val(this.width).trigger('change').end()
@@ -451,7 +455,7 @@
                 this.linkType = link.type
                 this.linkKey = link.key 
                 console.log(link)
-                this.text += link.key
+                this.text += '${'+link.key+'}'
                 $('.txt-palette').find('.txt-text').val(this.text)
             }
             blur(){
@@ -482,6 +486,16 @@
                     color:this.color
 
                 },this.getDimension())
+            }
+            handleClick(e){
+                if(e.ctrlKey){
+                    setCurrent(null)
+                    this.dom.addClass('.focus-ele')
+                    elementGroup.push(this)
+                }else{
+                    elementGroup = []
+                    setCurrent(this)
+                }
             }
             set zIndex(val){
                 this.dom && this.dom.css('z-index',val)
@@ -517,14 +531,15 @@
                 this.dom = $(`<div class='bgi-normal position-absolute ' style='background-image:url(${this.url})'> </div>`)
                     .css('width',this.width).css('height',this.height)
                     .css('z-index',this.zIndex)
-                    .on('click',function(){
-                        setCurrent(that)
+                    .on('click',function(e){
+                        that.handleClick(e)
+                       
                     })
                 this.dom.appendTo($('.canvas-content'))
                 this.pz = this.dom.panzoom({
                     startTransform: 'scale(1)',
                       maxScale: this.maxScale,
-                      increment: 0.2,
+                      increment: 0.05,
                       contain:true,
                       minScale: 0.4,
                       disableZoom: false
@@ -549,9 +564,9 @@
                 this.dom = $(`<div class='bgi-normal position-absolute ' style='background-image:url(data:image/png;base64,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)'> </div>`)
                     .css('width',this.width).css('height',this.height)
                     .css('z-index',this.zIndex)
-                    .html(`<div class='absolute-center text-shadow text-white'>${this.text}</div>`)
-                    .on('click',function(){
-                        setCurrent(that)
+                    .html(`<div class='absolute-center text-shadow text-white' style='padding-top:10px;'>${this.text}</div>`)
+                    .on('click',function(e){
+                        that.handleClick(e)
                     })
                 this.dom.appendTo($('.canvas-content'))
                 this.pz = this.dom.panzoom({
@@ -594,7 +609,7 @@
         } 
 
         class Txt extends ele{
-            constructor(text='点击添加\n\r文本信息',width=200,height=30){
+            constructor(text='点击添加文本信息',width=200,height=30){
                 super()
                 this.type='txt'
                 this.text = text
@@ -610,11 +625,11 @@
             }
             init(){
                 let that = this
-                this.dom = $(`<div class='bgi-normal position-absolute ' style='overflow:hidden'>${this.text} </div>`)
+                this.dom = $(`<div class='bgi-normal position-absolute ' style='overflow:hidden;text-align:left'>${this.text} </div>`)
                     .css('width',this.width).css('height',this.height)
                     .css('z-index',this.zIndex)
-                    .on('click',function(){
-                        setCurrent(that)
+                    .on('click',function(e){
+                        that.handleClick(e)
                     })
                 this.setFont();
                 console.log('font',this.dom.css('font'))
@@ -728,7 +743,8 @@
         var canvasW,
             canvasH,
             canvasBG,
-            canvasR=0;
+            canvasR=12;
+      
         $(function(){
             
 
@@ -738,11 +754,15 @@
             const $colorInput = $("input[name='color-select']")
             const $bgImgInput = $("input[name='bgImg-select']")
             const $bgColorInput = $("input[name='bgColor-select']")
-            const $canvas = $('.canvas-content')
+            const $canvas = $('.canvas-content').css('border-radius',canvasR)
             
             $('.shuffer-canvas').on('click',function(){
                 $canvas.toggleClass('real-view')
+                currentElement.blur();
+                currentElement = null;
+                $('.tool-bar').attr('data-current','')
             })
+
             $('.radius-plus').on('click',function(){
                 canvasR = Math.min(canvasW/2,canvasH/2,canvasR+1)
                 console.log(canvasR)
@@ -829,7 +849,7 @@
                createObjectURL(e.target.files[0]).then(url=>{
                   canvasBG = url
                   $canvas.css('background-image',`url(${url})`)
-                
+                    
                })
             })
             $colorInput.on('change',function(e){
@@ -869,6 +889,7 @@
             }).on('click','.txt-color',function(){
                 $colorInput[0].click();
             }).on('click','.bg-delete',function(){
+                canvasBG = '';
                 $canvas.css('background-image','none')
                         .css('background-color','#fff')
             }).on('click','.ele-delete',function(){
@@ -895,7 +916,8 @@
             var prev_length = 0;
             $('.txt-palette').on('input','.txt-text',function(){
                 let $this= $(this)
-                currentElement.text = $this.val()
+                console.log($this.val())
+                currentElement.text = $this.val().replace(/ /g,'&nbsp;').replace(/\n/g,'<br/>')
             }).on('change','.txt-width',function(){
                 let $this= $(this)
                 currentElement.width = $this.val()
@@ -928,21 +950,94 @@
                 let $this= $(this)
                 currentElement.height = $this.val()
             })
+            //刷新位置信息
+            const positionInfo = $('.position-info')
+            setInterval(function(){
+                if(currentElement){
+                  let dimension = currentElement.getDimension()
+                  positionInfo.html(`&nbsp;x:${dimension.x.toFixed(2)}px y:${dimension.y.toFixed(2)}px\
+                    width:${dimension.width.toFixed(2)}px height:${dimension.height.toFixed(2)}px\
+                    x:${(dimension.x*0.1).toFixed(2)}mm y:${(dimension.y*0.1).toFixed(2)}mm\
+                    width:${(dimension.width*0.1).toFixed(2)}mm height:${(dimension.height*0.1).toFixed(2)}mm&nbsp;\
+                    `)
+                }else{
+                    positionInfo.html('')
+                }
+            },60);
+            realize(fakeMsg)
         })  
         function serialize(){
             return {
                 "cardname":"杭州市社保卡",
                 width:canvasW,
                 height:canvasH,
-                borderRadius:canvasR,
                 backgroundImg:canvasBG,
                 context:elementArr.map(item=>item.serialize())
             }
         }
+        function realize(obj){
+            canvasBG = obj.backgroundImg
+            canvasW = obj.width
+            canvasH = obj.height
+            $('.main-title').text(obj.cardname)
+            $('.canvas-content').css('border-radius',obj.borderRadius)
+            .css('background-image',`url(${obj.backgroundImg})`)
+            $("input[name='width']").val(obj.width).trigger('change')
+            $("input[name='height']").val(obj.height).trigger('change')
+            obj.context.map(item=>{
+                var newEle;
+                if(item.type=='img'){
+                    let width = item.width 
+                    let height = item.height
+                    var maxScale;
+                    var ratio = width/height
+                    // 宽高比 大 按宽计算
+                    if(ratio >= canvasW/canvasH){
+                   
+                        width = Math.min(canvasW*0.6,width) 
+                        height = width/ratio
+                        maxScale = canvasW/width
+                       
+                    }else{
+                        height = Math.min(canvasH*0.6,height) 
+                        width = height*ratio
+                        maxScale = canvasH/height
+                    }
+                     newEle = new Img(item.backgroundImg,width,height,maxScale)
+                    
+                   
+                }else if(item.type=='txt'){
+                    newEle = new Txt()
+                    newEle.text = item.value
+                    newEle.width = item.width
+                    newEle.height = item.height
+                    newEle.color = item.color
+
+                    newEle.fontSize = item.fontSize
+                    newEle.fontFamily = item.fontFamily
+                    newEle.fontWeight = item.fontWeight
+                    newEle.lineHeight = item.lineHeight
+                   
+                }else if(item.type=='image-var'){
+                    newEle = new ImageVar(item.src,200,200,canvasW,canvasH)
+                    newEle.width = item.width
+                    newEle.height = item.height
+                    
+                }
+                newEle.dom.panzoom('pan',item.x,item.y)
+                elementArr.push(newEle)
+            })
+        }
 
         function setCurrent(ele){
-            elementArr.map(item => item.blur())
-            ele.focus()
+            if(ele){
+                elementArr.map(item => item.blur())
+                ele.focus()
+            }else{
+                currentElement&&currentElement.blur();
+                currentElement = null;
+                $('.tool-bar').attr('data-current','')
+            }
         }
 
         function createObjectURL(blob){
