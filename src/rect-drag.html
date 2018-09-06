@@ -54,7 +54,7 @@
         a:active i{
              font-size:0.9em;
         }
-        #img-tool,#txt-tool{
+        #img-tool,#txt-tool,#align-tool{
             width:100%;
             top:300px;
             -webkit-transform:translateY(-70px);
@@ -69,9 +69,9 @@
             position:absolute;
             bottom:0px;
         }
-        #txt-tool{
+       /* #txt-tool{
             top:450px;
-        }
+        }*/
         
         .text-clip{
             -webkit-background-clip: text;
@@ -113,6 +113,12 @@
             opacity: 1;
              -webkit-transform:translateY(0px);
         }
+        .tool-bar[data-current='align'] #align-tool{
+            display: block;
+            height:250px;
+            opacity: 1;
+             -webkit-transform:translateY(0px);
+        }
 
         .tool-bar[data-current='txt'] #txt-tool{
             display: block;
@@ -135,6 +141,9 @@
         }
         .focus-ele{
             outline: var(--assertive) 1px dashed;
+        }
+        .group-ele{
+            outline: var(--blue) 1px dashed;
         }
         .txt-palette,.imgVar-palette{
             width:var(--palette-width);
@@ -233,6 +242,21 @@
                 </a>
             </li>
         </ul>
+        <ul id='align-tool' style='font-size: 30px;'>
+            <li>
+                <a class='align-left'><i class='iconfont text-white'>&#xe65d;</i></a>
+            </li>
+            <li>
+                <a class='align-right'><i class='iconfont text-white'>&#xe603;</i></a>
+            </li>
+            <li>
+                <a class='align-top'><i class='iconfont text-white'>&#xe605;</i></a>
+            </li>
+            <li>
+                <a class='align-bottom'><i class='iconfont text-white'>&#xe607;</i></a>
+            </li>
+            
+        </ul>
         <ul id='delete-tool' class='pt-4 border-top border-gray-900' style='font-size: 30px;'>
             
             <li>
@@ -261,6 +285,13 @@
         <div class="canvas-content bgi-normal absolute-center"  style="text-align:center;">
             
         </div>
+
+        <p class='tip-info position-absolute text-white m-0'
+        style='bottom:50px;line-height: 1.5;left:50%;transform:translateX(-50%)'>
+            1.   比例尺 显示尺寸  100px = 1cmm  实际尺寸<br/>
+            2.   按住 ctrl 键选择多个元素进行排列<br/>
+            3.   按住 ctrl + ↑→↓← 键进行位置的微调
+        </p>
         <p class='position-info bg-black position-absolute text-white m-0'
         style='bottom:2px;line-height: 1.14;'></p>
         <div class='imgVar-palette position-absolute bg-gray-900' style='left:100%;top:0;height:100%;'>
@@ -376,7 +407,7 @@
         }]
         // 最终的对象集合
         const elementArr = []
-        var elementGroup =[]
+        var elementGroup = new Set()
         var currentElement; 
         
         // Regex
@@ -459,10 +490,13 @@
                 $('.txt-palette').find('.txt-text').val(this.text)
             }
             blur(){
-                this.dom && this.dom.removeClass('focus-ele')
+                this.dom && this.dom.removeClass('focus-ele').removeClass('group-ele')
+            }
+            getMatrix(){
+                return getMatrix(this.dom.css('transform'))
             }
             getDimension(){
-                let matrix = getMatrix(this.dom.css('transform'))
+                let matrix =this.getMatrix()
                 return {
                     x : this.width * (1 - matrix[0])/2 + Number(matrix[4]),
                     y : this.height * (1 - matrix[3])/2 + Number(matrix[5]),
@@ -490,10 +524,11 @@
             handleClick(e){
                 if(e.ctrlKey){
                     setCurrent(null)
-                    this.dom.addClass('.focus-ele')
-                    elementGroup.push(this)
+                    this.dom.toggleClass('group-ele')
+                    elementGroup.has(this)?elementGroup.delete(this):elementGroup.add(this)
+                    elementGroup.size>0?$('.tool-bar').attr('data-current','align'):$('.tool-bar').attr('data-current','')
                 }else{
-                    elementGroup = []
+                    elementGroup = new Set()
                     setCurrent(this)
                 }
             }
@@ -758,9 +793,7 @@
             
             $('.shuffer-canvas').on('click',function(){
                 $canvas.toggleClass('real-view')
-                currentElement.blur();
-                currentElement = null;
-                $('.tool-bar').attr('data-current','')
+                setCurrent(null)
             })
 
             $('.radius-plus').on('click',function(){
@@ -862,15 +895,7 @@
             })
             $('.tool-bar').on('click','.add-img,.add-txt',function(){
                //  ...
-            }).on('click','.img-scale',function(){
-                let $this = $(this)
-                let type = $this.attr('data-type')
-                if(type=='plus'){
-                    currentElement.dom.panzoom("zoom")
-                }else{
-                    currentElement.dom.panzoom("zoom",true)
-                }
-            }).on('click','.add-img',function(){
+            }).on('click','.add-img',function(){       // 增加元素 菜单组
                 $imgInput[0].click();
             }).on('click','.add-linkImg',function(){
                 $('.link-palette').attr('data-type','img').show()
@@ -882,13 +907,71 @@
                 $bgImgInput[0].click()
             }).on('click','.add-bgColor',function(){
                 $bgColorInput[0].click()
-            }).on('click','.txt-plus',function(){
+            }).on('click','.img-scale',function(){     // 图片元素 编辑菜单组
+                let $this = $(this)
+                let type = $this.attr('data-type')
+                if(type=='plus'){
+                    currentElement.dom.panzoom("zoom")
+                }else{
+                    currentElement.dom.panzoom("zoom",true)
+                }
+            }).on('click','.align-left',function(){     //  排列组合操作组
+                var criteria;
+                for(el of elementGroup){
+                    if(criteria){
+                        let dimension = el.getDimension();
+                        let matrix = el.getMatrix()
+                        let martix_4 = criteria - dimension.width * (1-matrix[0])/2;
+                        el.dom.panzoom('pan',martix_4,matrix[5])
+                    }else{
+                        criteria = el.getDimension().x
+                    }
+                }
+            }).on('click','.align-right',function(){     //  排列组合操作组
+                var criteria;
+                for(el of elementGroup){
+                    if(criteria){
+                        let dimension = el.getDimension();
+                        let matrix = el.getMatrix()
+                        let martix_4 = criteria - dimension.width * (1-matrix[0])/2 - dimension.width;
+                        el.dom.panzoom('pan',martix_4,matrix[5])
+                    }else{
+                        let dimension = el.getDimension()
+                        criteria = dimension.x + dimension.width
+                    }
+                }
+            }).on('click','.align-top',function(){     //  排列组合操作组
+                var criteria;
+                for(el of elementGroup){
+                    if(criteria){
+                        let dimension = el.getDimension();
+                        let matrix = el.getMatrix()
+                        let martix_5 = criteria - dimension.height * (1-matrix[3])/2;
+                        el.dom.panzoom('pan',matrix[4],martix_5)
+                    }else{
+                        criteria = el.getDimension().y
+                    }
+                }
+            }).on('click','.align-bottom',function(){     //  排列组合操作组
+                var criteria;
+                for(el of elementGroup){
+                    if(criteria){
+                        let dimension = el.getDimension();
+                        let matrix = el.getMatrix()
+                        let martix_5 = criteria - dimension.height * (1-matrix[3])/2 -dimension.height;
+                        el.dom.panzoom('pan',matrix[4],martix_5)
+                    }else{
+                        let dimension = el.getDimension()
+                        criteria = dimension.y + dimension.height
+                    }
+                }
+            }).on('click','.txt-plus',function(){      // 文字元素 编辑菜单组
                 currentElement.fontPlus()
             }).on('click','.txt-minus',function(){
                 currentElement.fontMinus()
             }).on('click','.txt-color',function(){
                 $colorInput[0].click();
-            }).on('click','.bg-delete',function(){
+            }).on('click','.bg-delete',function(){     // 删除 操作 菜单组
                 canvasBG = '';
                 $canvas.css('background-image','none')
                         .css('background-color','#fff')
@@ -955,9 +1038,9 @@
             setInterval(function(){
                 if(currentElement){
                   let dimension = currentElement.getDimension()
-                  positionInfo.html(`&nbsp;x:${dimension.x.toFixed(2)}px y:${dimension.y.toFixed(2)}px\
+                  positionInfo.html(`&nbsp;显示尺寸 x:${dimension.x.toFixed(2)}px y:${dimension.y.toFixed(2)}px\
                     width:${dimension.width.toFixed(2)}px height:${dimension.height.toFixed(2)}px\
-                    x:${(dimension.x*0.1).toFixed(2)}mm y:${(dimension.y*0.1).toFixed(2)}mm\
+                    实际尺寸 x:${(dimension.x*0.1).toFixed(2)}mm y:${(dimension.y*0.1).toFixed(2)}mm\
                     width:${(dimension.width*0.1).toFixed(2)}mm height:${(dimension.height*0.1).toFixed(2)}mm&nbsp;\
                     `)
                 }else{
@@ -965,6 +1048,18 @@
                 }
             },60);
             realize(fakeMsg)
+            $(document).on('keydown',function(e){
+                if(e.ctrlKey && e.keyCode && currentElement){
+                    // 上
+                    if(e.keyCode == 40){currentElement.dom.panzoom('pan',0,1,{relative:true})}
+                    // 右
+                    if(e.keyCode == 39){currentElement.dom.panzoom('pan',1,0,{relative:true})}
+                    //下
+                    if(e.keyCode == 38){currentElement.dom.panzoom('pan',0,-1,{relative:true})}
+                    //左
+                    if(e.keyCode == 37){currentElement.dom.panzoom('pan',-1,0,{relative:true})}
+                }
+            })
         })  
         function serialize(){
             return {
