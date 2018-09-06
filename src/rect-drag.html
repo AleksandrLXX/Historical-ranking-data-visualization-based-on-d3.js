@@ -195,7 +195,7 @@
     </style>
 </head>
 
-<body class='p-0 m-0 h-100 lump-blue position-relative' style='overflow:hidden;'>
+<body class='p-0 m-0 h-100  position-relative' style='overflow:hidden;background-color:#071937'>
     
     <div class='tool-bar m-0 h-100 bg-black position-absolute' style='width:100px;right:0;top:0;box-sizing: border-box;overflow:hidden;z-index:9999;' data-current=''>
         <ul id='main-tool' class='pt-4 border-bottom border-gray-900' style='font-size: 30px;'>
@@ -212,7 +212,7 @@
                 <a class='add-linkImg'><i class='iconfont text-white'>&#xe621;</i></a>
             </li>
             <li>
-                <a class='add-bgImg' >
+                <a class='add-bgImg'>
                     <i class='iconfont text-white'>&#xe77f;</i>
                     <input type="file" name="bgImg-select" accept="image/*" class='position-absolute' style='opacity:0;width:0;height:0'/>
                 </a>
@@ -272,9 +272,9 @@
             </li>
         </ul>
     </div>
-    <div class='left h-100 bg-cyan position-relative' >
+    <div class='left h-100  position-relative' style='background-color: #071937;background-image: url("./dot.png")'>
         <p class='main-title m-0 text-center text-white' style="font-size: 1.4em;font-weight: 600;"></p>
-        <p class='m-0 text-center'>
+        <p class='m-0 text-center text-white'>
             画布尺寸: 宽 <input type="number" disabled name="width" value="856" />×
             高 <input type="number" name="height" disabled value='539.8'/>
             <a class='shuffer-canvas btn btn-main shadow px-2 py-1 m-1'>切换视图</a>
@@ -282,14 +282,17 @@
             <a class='iconfont radius-minus text-white btn btn-main shadow rounded-sm p-1 m-1' style='font-size: 1.8em'>&#xe604;</a> -->
 
         </p>
+        <div class="canvas-container bgi-normal absolute-center"  style="text-align:center;">
+            
+        </div>
         <div class="canvas-content bgi-normal absolute-center"  style="text-align:center;">
             
         </div>
 
         <p class='tip-info position-absolute text-white m-0'
         style='bottom:50px;line-height: 1.5;left:50%;transform:translateX(-50%)'>
-            1.   比例尺 显示尺寸  100px = 1cmm  实际尺寸<br/>
-            2.   按住 ctrl 键选择多个元素进行排列<br/>
+            1.   比例尺 显示尺寸  100px = 1mm  实际尺寸<br/>
+            2.   按住 ctrl 键选择多个元素进行排列对齐<br/>
             3.   按住 ctrl + ↑→↓← 键进行位置的微调
         </p>
         <p class='position-info bg-black position-absolute text-white m-0'
@@ -361,6 +364,7 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="./jquery.panzoom.js"></script>
     <script src="font-ch-en.js" type="text/javascript" charset="utf-8"></script>
+    <script src="d3.js" type="text/javascript" charset="utf-8"></script>
     <script src="isSupportFontFamily.js" type="text/javascript" charset="utf-8"></script>
     <script src="../dist/result.js" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -778,6 +782,7 @@
         var canvasW,
             canvasH,
             canvasBG,
+            canvasM = 60,
             canvasR=12;
       
         $(function(){
@@ -790,9 +795,10 @@
             const $bgImgInput = $("input[name='bgImg-select']")
             const $bgColorInput = $("input[name='bgColor-select']")
             const $canvas = $('.canvas-content').css('border-radius',canvasR)
-            
+            const $canvasContainer = $('.canvas-container')
             $('.shuffer-canvas').on('click',function(){
                 $canvas.toggleClass('real-view')
+                $canvasContainer.toggle()
                 setCurrent(null)
             })
 
@@ -837,9 +843,11 @@
                
             })
             $("input[name='width'],input[name='height']").on('change',function(){
-                canvasW = $widthInput.val()
-                canvasH = $heightInput.val()
-                $canvas.css({'width':canvasW,'height':canvasH})
+                canvasW = Number($widthInput.val())
+                canvasH = Number($heightInput.val())
+                $canvas.css({'width':canvasW,'height':canvasH}) 
+                $canvasContainer.css({'width':canvasW+canvasM,'height':canvasH+canvasM})
+
                 $('.txt-width,.imgVar-width').prop('max',canvasW)
                 $('.txt-height,.imgVar-height').prop('max',canvasH)
             }).trigger('change')
@@ -1038,15 +1046,72 @@
             setInterval(function(){
                 if(currentElement){
                   let dimension = currentElement.getDimension()
-                  positionInfo.html(`&nbsp;显示尺寸 x:${dimension.x.toFixed(2)}px y:${dimension.y.toFixed(2)}px\
-                    width:${dimension.width.toFixed(2)}px height:${dimension.height.toFixed(2)}px\
-                    实际尺寸 x:${(dimension.x*0.1).toFixed(2)}mm y:${(dimension.y*0.1).toFixed(2)}mm\
-                    width:${(dimension.width*0.1).toFixed(2)}mm height:${(dimension.height*0.1).toFixed(2)}mm&nbsp;\
+                  //显示尺寸 x:${dimension.x.toFixed(2)}px y:${dimension.y.toFixed(2)}px\
+                    // width:${dimension.width.toFixed(2)}px height:${dimension.height.toFixed(2)}px\
+                  positionInfo.html(`&nbsp;
+                    实际尺寸 x:${(dimension.x*0.1).toFixed(2)}mm&nbsp;&nbsp;y:${(dimension.y*0.1).toFixed(2)}mm&nbsp;&nbsp;\
+                    width:${(dimension.width*0.1).toFixed(2)}mm&nbsp;&nbsp;height:${(dimension.height*0.1).toFixed(2)}mm&nbsp;\
                     `)
                 }else{
                     positionInfo.html('')
                 }
             },60);
+            {
+               //获取div，向里面添加svg
+                var svg = d3.select(".canvas-container")
+                .append("svg:svg")//在“container”中插入svg
+                .attr("width", canvasW + canvasM)//设置svg的宽度
+                .attr("height", canvasH + canvasM)//设置svg的高度
+                .attr("fill",'#fff')
+                .append('rect')
+                .attr("width", canvasW + canvasM)
+                .attr("height", canvasH + canvasM)
+                .attr("fill",'#212529')
+
+                //添加g元素
+                var g = d3.select("svg")
+                .append("g")
+                .attr("transform","translate("+ canvasM/2+","+canvasM/2+")") 
+
+                var scale_x = d3.scaleLinear()//把曲线沿x轴按比例放大
+                .domain([0, canvasW/100])
+                .range([0, canvasW])
+                var scale_y = d3.scaleLinear()//把曲线沿y轴按比例放大
+                .domain([0, canvasH/100])
+                .range([0,canvasH])
+
+                var x_axis = d3.axisTop(scale_x).tickArguments([Math.round(canvasW/10)]).tickSize(10),
+                y_axis = d3.axisLeft(scale_y).tickArguments([Math.round(canvasH/10)]).tickSize(10)
+
+                var ax_x = g.append("g")
+                .call(x_axis).attr('stroke','#fff')
+
+                ax_x.selectAll('line').attr('stroke','#fff').attr('y2',function(d){
+                     return Math.floor(d) == d ? '-10' :'-4'
+                })
+                
+                ax_x.selectAll('text').html(function(d){
+                    return Math.floor(d) == d ? d :''
+                })
+
+                var ax_y = g.append("g")
+                .call(y_axis)
+                .attr('stroke','#fff')
+
+
+                ax_y.selectAll('line').attr('stroke','#fff').attr('x2',function(d){
+                     return Math.floor(d) == d ? '-10' :'-4'
+                })
+                ax_y.selectAll('text').html(function(d){
+                    return Math.floor(d) == d ? d :''
+                })
+                ax_y.append("text")
+                .text("mm")
+                .attr("transform","translate(-6,-5)")
+                .attr("stroke","#fff")
+                .attr("text-anchor","end")//字体尾部对齐
+                .attr("dy","-1em")//沿y轴平移一个字体的大小
+            }
             realize(fakeMsg)
             $(document).on('keydown',function(e){
                 if(e.ctrlKey && e.keyCode && currentElement){
