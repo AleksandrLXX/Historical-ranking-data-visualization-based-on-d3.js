@@ -527,9 +527,19 @@
             }
             handleClick(e){
                 if(e.ctrlKey){
+                    let crt_ele = currentElement 
                     setCurrent(null)
+                    // 当前元素 不是 点击的元素
+                    if(crt_ele && crt_ele !== this ){
+                        crt_ele.dom.toggleClass('group-ele')
+                        elementGroup.has(crt_ele)?elementGroup.delete(crt_ele):elementGroup.add(crt_ele)
+                    }
+
                     this.dom.toggleClass('group-ele')
                     elementGroup.has(this)?elementGroup.delete(this):elementGroup.add(this)
+                        
+                    
+                    
                     elementGroup.size>0?$('.tool-bar').attr('data-current','align'):$('.tool-bar').attr('data-current','')
                 }else{
                     elementGroup = new Set()
@@ -984,7 +994,16 @@
                 $canvas.css('background-image','none')
                         .css('background-color','#fff')
             }).on('click','.ele-delete',function(){
-                currentElement ? currentElement.remove():alert('请先选择要删除的文字或图片')
+                if(currentElement) {
+                    currentElement.remove()
+                }else if(elementGroup.size>0){
+                    for(let ele of elementGroup){
+                        ele.remove()
+                        elementGroup.delete(ele)
+                    }
+                }else{
+                    alert('请先选择要删除的文字或图片')
+                }
             }).on('click','.ele-layer',function(){
                 currentElement ? currentElement.toLayerBottom():alert('请先选择要置于底层的文字或图片')
             }).on('click','.ele-link',function(){
@@ -1114,16 +1133,64 @@
             }
             realize(fakeMsg)
             $(document).on('keydown',function(e){
-                if(e.ctrlKey && e.keyCode && currentElement){
+                if(e.ctrlKey && e.keyCode ){
                     // 上
-                    if(e.keyCode == 40){currentElement.dom.panzoom('pan',0,1,{relative:true})}
-                    // 右
-                    if(e.keyCode == 39){currentElement.dom.panzoom('pan',1,0,{relative:true})}
-                    //下
-                    if(e.keyCode == 38){currentElement.dom.panzoom('pan',0,-1,{relative:true})}
-                    //左
-                    if(e.keyCode == 37){currentElement.dom.panzoom('pan',-1,0,{relative:true})}
+                    if(currentElement){
+                        if(e.keyCode == 40){
+                           currentElement.dom.panzoom('pan',0,1,{relative:true})
+
+                        }
+                        // 右
+                        if(e.keyCode == 39){
+                            currentElement.dom.panzoom('pan',1,0,{relative:true})
+                        }
+                        //下
+                        if(e.keyCode == 38){
+                            currentElement.dom.panzoom('pan',0,-1,{relative:true})
+                        }
+                        //左
+                        if(e.keyCode == 37){
+                            currentElement.dom.panzoom('pan',-1,0,{relative:true})
+                        }
+                    }else if(elementGroup.size>0){
+                        if(e.keyCode == 40){
+                           for (let ele of elementGroup){
+                               ele.dom.panzoom('pan',0,1,{relative:true})
+                           }
+                        }
+                        // 右
+                        if(e.keyCode == 39){
+                            for (let ele of elementGroup){
+                               ele.dom.panzoom('pan',1,0,{relative:true})
+                            }
+                        }
+                        //下
+                        if(e.keyCode == 38){
+                             for (let ele of elementGroup){
+                               ele.dom.panzoom('pan',0,-1,{relative:true})
+                            }
+                        }
+                        //左
+                        if(e.keyCode == 37){
+                             for (let ele of elementGroup){
+                               ele.dom.panzoom('pan',-1,0,{relative:true})
+                            }
+                        }
+                    }
                 }
+                if(e.keyCode == 46){
+                    if(currentElement) {
+                        currentElement.remove()
+                    }else if(elementGroup.size>0){
+                        for(let ele of elementGroup){
+                            ele.remove()
+                            elementGroup.delete(ele)
+                        }
+                    }else{
+                        alert('请先选择要删除的文字或图片')
+                    }
+                }
+
             })
         })  
         function serialize(){
