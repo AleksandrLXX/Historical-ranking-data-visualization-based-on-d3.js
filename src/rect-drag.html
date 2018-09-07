@@ -8,14 +8,14 @@
     <link rel="stylesheet" type="text/css" href="./index.css">
     <style type="text/css">
         :root{
-            --palette-width: 250px;
+            --palette-width: 270px;
         }
 
         input[type=range]{ 
                  
                 outline: none; 
                 -webkit-appearance: none;/*清除系统默认样式*/  
-                width:56% !important;  
+                width:42% !important;  
                 background: -webkit-linear-gradient(#61bd12, #61bd12) no-repeat, #ddd;  
                 background-size: 30% 100%;/*设置左右宽度比例*/  
                 height: 3px;/*横条的高度*/  
@@ -127,7 +127,7 @@
              -webkit-transform:translateY(0px);
         }
         .tool-bar[data-current='txt'] + .left,.tool-bar[data-current='image-var'] + .left{
-            margin-right:350px;
+            margin-right:370px;
         }
         .tool-bar[data-current='image-var'] + .left .imgVar-palette{
             z-index: 999;
@@ -168,7 +168,7 @@
             height: 50px;
             line-height: 50px;
             vertical-align: center;
-            padding:10px 20px;
+            padding:10px 10px;
             margin:0;
             border-bottom:2px var(--black) solid;
             text-align: left;
@@ -191,6 +191,9 @@
         .real-view{
             transform:scale(0.3779) translate(-50%,-50%);
             transform-origin:left top;
+        }
+        .range-button-decrease,.range-button-decrease{
+            width:23px;height:23px;
         }
     </style>
 </head>
@@ -302,12 +305,16 @@
             <ul class='text-white'>
                <li>
                     宽度
+                    <button class="button range-button-decrease">-</button>
                     <input class='imgVar-width' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <button class="button range-button-increase">+</button>
                     <span class='imgVar-width-info'></span>
                 </li> 
                <li> 
                     高度
+                    <button class="button range-button-decrease">-</button>
                     <input class='imgVar-height' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <button class="button range-button-increase">+</button>
                     <span class='imgVar-height-info'></span>
                 </li>
             </ul>
@@ -320,22 +327,31 @@
             <ul class=' text-white'>
                <li>
                     宽度
+                     <button class="button range-button-decrease">-</button>
                     <input class='txt-width' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <button class="button range-button-increase">+</button>
                     <span class='txt-width-info'></span>
+
                 </li> 
                <li> 
                     高度
+                     <button class="button range-button-decrease">-</button>
                     <input class='txt-height' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <button class="button range-button-increase">+</button>
                     <span class='txt-height-info'></span>
                 </li>
                 <li> 
                     行高
+                     <button class="button range-button-decrease">-</button>
                     <input class='txt-lineHeight' type='range' id="rotateRatio" min='0' max='5' step='0.1'/>
+                    <button class="button range-button-increase">+</button>
                     <span class='txt-lineHeight-info'></span>
                 </li>
                 <li> 
                     磅数
+                     <button class="button range-button-decrease">-</button>
                     <input class='txt-fontWeight' type='range' id="rotateRatio" min='100' max='900' step='100'/>
+                    <button class="button range-button-increase">+</button>
                     <span class='txt-fontWeight-info'></span>
                 </li> 
                 <li> 
@@ -850,6 +866,7 @@
 
                 $('.txt-width,.imgVar-width').prop('max',canvasW)
                 $('.txt-height,.imgVar-height').prop('max',canvasH)
+                initAxis()
             }).trigger('change')
             
             $imgInput.on('change',function(e){
@@ -1041,6 +1058,16 @@
                 let $this= $(this)
                 currentElement.height = $this.val()
             })
+
+            $('.imgVar-palette,.txt-palette').on('click','.range-button-decrease',function(){
+                let parent = $(this).closest('li')
+                let input = parent.find('input[type="range"]')
+                input.val(Math.max(Number(input.prop('min')),Number(input.val())-Number(input.prop('step')))).trigger('change')
+            }).on('click','.range-button-increase',function(){
+                let parent = $(this).closest('li')
+                let input = parent.find('input[type="range"]')
+                input.val(Math.min(Number(input.prop('max')),Number(input.val())+Number(input.prop('step')))).trigger('change')
+            })
             //刷新位置信息
             const positionInfo = $('.position-info')
             setInterval(function(){
@@ -1056,9 +1083,10 @@
                     positionInfo.html('')
                 }
             },60);
-            {
+            function initAxis(){
                //获取div，向里面添加svg
                 var svg = d3.select(".canvas-container")
+                .html('')
                 .append("svg:svg")//在“container”中插入svg
                 .attr("width", canvasW + canvasM)//设置svg的宽度
                 .attr("height", canvasH + canvasM)//设置svg的高度
