@@ -506,7 +506,12 @@
                 this.linkType = link.type
                 this.linkKey = link.key 
                 console.log(link)
-                this.text += '${'+link.key+'}'
+                if (this.text == '点击添加文本信息'){
+                  this.text = '${'+link.key+'}'
+                }else{
+                    this.text += '${'+link.key+'}'
+                    
+                }
                 $('.txt-palette').find('.txt-text').val(this.text)
             }
             blur(){
