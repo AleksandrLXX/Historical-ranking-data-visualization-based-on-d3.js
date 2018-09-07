@@ -838,26 +838,7 @@
                 $canvas.css('border-radius',canvasR)
             })
 
-            $('.link-palette').find('ul').html(function(){
-
-                return linkDic.map(item=>{
-                 return item.type=='img'?`<li data-type='${item.type}' class='py-2 m-0 border-top border-gray-800'>
-                            <a class='link-img w-100' data-key='${item.key}' style='overflow:hidden;text-align:left'>
-                                <i class='iconfont'> &#xe610; </i>
-                                <span class='ml-4' style="font-size: 0.8em;">
-                                    ${item.key}
-                                </span>
-                            </a>
-                        </li>`: `<li data-type='${item.type}' class='py-2 m-0 border-top border-gray-800'>
-                            <a class='link-txt w-100' data-key='${item.key}' style='overflow:hidden;text-align:left'>
-                                <i class='iconfont'> &#xe89b; </i>
-                                <span class='ml-4' style="font-size: 0.8em;">
-                                   ${item.key}
-                                </span>
-                            </a>
-                        </li>` 
-                }).join('')
-            })
+            
 
             $("input[type='range']").on('change',function(){
                 let $this = $(this)
@@ -1231,6 +1212,34 @@
             }
         }
         function realize(obj){
+
+            linkDic = []
+            obj.img.map(item=>{
+                linkDic.push({type:'img',key:item},{type:'txt',key:item})
+            })
+            obj.txt.map(item=>{
+                linkDic.push({type:'txt',key:item})
+            })
+            $('.link-palette').find('ul').html(function(){
+
+                return linkDic.map(item=>{
+                 return item.type=='img'?`<li data-type='${item.type}' class='py-2 m-0 border-top border-gray-800'>
+                            <a class='link-img w-100' data-key='${item.key}' style='overflow:hidden;text-align:left'>
+                                <i class='iconfont'> &#xe610; </i>
+                                <span class='ml-4' style="font-size: 0.8em;">
+                                    ${item.key}
+                                </span>
+                            </a>
+                        </li>`: `<li data-type='${item.type}' class='py-2 m-0 border-top border-gray-800'>
+                            <a class='link-txt w-100' data-key='${item.key}' style='overflow:hidden;text-align:left'>
+                                <i class='iconfont'> &#xe89b; </i>
+                                <span class='ml-4' style="font-size: 0.8em;">
+                                   ${item.key}
+                                </span>
+                            </a>
+                        </li>` 
+                }).join('')
+            })
             canvasBG = obj.backgroundImg
             canvasW = obj.width
             canvasH = obj.height
