@@ -1113,8 +1113,9 @@
                 .domain([0, canvasH/100])
                 .range([0,canvasH])
 
-                var x_axis = d3.axisTop(scale_x).tickArguments([Math.round(canvasW/10)]).tickSize(10),
+                var x_axis = d3.axisTop(scale_x).tickArguments([Math.round(canvasW/10)]).tickSize(10).tickFormat(d=>Math.floor(d) == d ? d :''),
                 y_axis = d3.axisLeft(scale_y).tickArguments([Math.round(canvasH/10)]).tickSize(10)
+                .tickFormat(d=>Math.floor(d) == d ? d :'')
 
                 var ax_x = g.append("g")
                 .call(x_axis).attr('stroke','#fff')
@@ -1123,10 +1124,7 @@
                      return Math.floor(d) == d ? '-10' :'-4'
                 })
                 
-                ax_x.selectAll('text').html(function(d){
-                    return Math.floor(d) == d ? d :''
-                })
-
+                
                 var ax_y = g.append("g")
                 .call(y_axis)
                 .attr('stroke','#fff')
@@ -1135,9 +1133,7 @@
                 ax_y.selectAll('line').attr('stroke','#fff').attr('x2',function(d){
                      return Math.floor(d) == d ? '-10' :'-4'
                 })
-                ax_y.selectAll('text').html(function(d){
-                    return Math.floor(d) == d ? d :''
-                })
+                
                 ax_y.append("text")
                 .text("mm")
                 .attr("transform","translate(-6,-5)")

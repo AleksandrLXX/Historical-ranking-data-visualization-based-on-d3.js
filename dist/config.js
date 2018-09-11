@@ -46,7 +46,7 @@ const config = {
 
     // 使用计数器
     // 计数器会出现在右上角，记录着当前榜首的持续时间。
-    use_counter : false,
+    use_counter : true,
     // 每个时间节点对于计数器的步长。
     // 比如时间节点日期的间隔可能为1周（七天），那么step的值就应该为7。
     step : 7,

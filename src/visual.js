@@ -143,7 +143,7 @@ function draw(data) {
     const xAxis = d3.axisBottom()
         .scale(xScale)
         .ticks(xTicks)
-        .tickPadding(20)
+        .tickPadding(30)
         .tickFormat(d => d)
         .tickSize(-innerHeight);
 
