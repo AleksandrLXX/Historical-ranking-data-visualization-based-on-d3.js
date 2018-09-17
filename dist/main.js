@@ -9,6 +9,9 @@ $('#inputfile').change(function () {
         draw(data);
     }
 });
+var section = d3.selectAll("section");
+var div = section.append("div");
+div.html("Hello, world!");
 var top_type;
 function draw(data) {
     var color = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
@@ -186,7 +189,7 @@ function draw(data) {
         }
         tempSort = currentSort;
     }
-
+ 
     if (showMessage) {
 
         // 左1文字
