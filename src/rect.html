@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.chart rect {
+  fill: steelblue;
+}
+
+.chart text {
+  fill: steelblue;
+  font: 10px sans-serif;
+  text-anchor: end;
+}
+
+</style>
+<svg class="chart"></svg>
+<script src="https://cdn.bootcss.com/d3/4.13.0/d3.min.js"></script>
+<script>
+
+var margin = {top: 20, right: 30, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+var x = d3.scaleBand()
+    .rangeRound([0, width]).padding(0.2);
+
+var y = d3.scaleLinear()
+    .range([height, 0]);
+
+var chart = d3.select(".chart")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+var data = [
+  {name: "Locke",    value:  4},
+  {name: "Reyes",    value:  8},
+  {name: "Ford",     value: 15},
+  {name: "Jarrah",   value: 16},
+  {name: "Shephard", value: 23},
+  {name: "Kwon",     value: 42}
+];
+
+
+  x.domain(data.map(function(d) { return d.name; }));
+  y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+  var xAxis = d3.axisBottom()
+    .scale(x).ticks(10)
+
+  var yAxis = d3.axisLeft()
+    .scale(y).ticks(20)
+  chart.append('g'). attr("transform", "translate(0," + height + ")").call(xAxis)
+  // 与以下写法相同
+  yAxis(chart.append('g'))
+  // chart.call(yAxis)
+
+  var bar = chart.selectAll(".bar")
+      .data(data)
+    .enter().append("g")
+      .attr("transform", function(d) { return "translate(" + x(d.name) + ",0)"; });
+
+  bar.append("rect")
+      .attr("y", function(d) { return y(d.value); })
+      .attr("height", function(d) { return height - y(d.value); })
+      .attr("width", x.bandwidth());
+
+  bar.append("text")
+      .attr("x", 0)
+      .attr("y", function(d) { return y(d.value) + 3; })
+      .attr("dy", ".75em")
+      .text(function(d) { return d.value; });
+ 
+
+function type(d) {
+  d.value = +d.value; // coerce to number
+  return d;
+}
+
+</script>
